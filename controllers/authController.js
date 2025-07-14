@@ -2,7 +2,8 @@ import {User} from '../models/userModel.js'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import validator from "validator";
-// import {createVirtualAccount} from '../helpers/createVirtualAccount.js'
+import {createUniqueAccount} from '../helpers/createUniqueAccount.js'
+import { Account } from '../models/accountModel.js';
 
 /**
  * Sign UP Users
@@ -14,15 +15,22 @@ export async function signup(req,res) {
         if(!req.body){
             return res.status(401).json({message:"Invalid Details",status:false})
         }
-        const user={email:String(req.body.email),password:req.body.password,first_name:req.body.first_name, balance:0}
+        const user={email:String(req.body.email),password:req.body.password,name:req.body.name}
         
-        if(!validator.isEmail(email)|| first_name==null || String(first_name).length<2 || password==null || String(password).length<8){
+        if(!validator.isEmail(email)|| name==null || String(name).length<2 || password==null || String(password).length<8){
             return res.status(401).json({message:"Invalid Details Received",status:false})
         }
 
+        if (User.userExist(user.email)) {
+            return res.status(401).json({message:"This account exists already !",status:false})
+        }
+
         const newUser=await User.create(user);
-        // createVirtualAccount()
-        res.status(201).json({message:"SignUp Successful!",status:true,user:{id:newUser.id,email}})
+
+        const account_number=createUniqueAccount()
+        await Account.create(newUser.id , account_number)
+
+        res.status(201).json({message:"SignUp Successful!",status:true,account_number:account_number})
     
     }catch(error){
         res.status(500).json({message:"Error Signing Up",status:false})
@@ -39,9 +47,9 @@ export async function signup(req,res) {
 export async function login(req,res) {
     try {
         const {email,password}=req.body;
-        const user=await User.findByEmail(String(email));
+        const user= User.findByEmail(String(email));
         if(!user || !(bcrypt.compareSync(String(password),user.password))){
-            return res.status(401).json({message:"Invalid Credentials",status:false})
+            return res.status(401).json({message:"Invalid Login Details ",status:false})
         }
 
         const token=jwt.sign({id:user.id},process.env.JWT_SECRET,{expiresIn:"1d"})
