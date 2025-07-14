@@ -13,7 +13,7 @@ export const User = {
          * @returns 
     */
     findByID(id) {
-        return db("users").where({ id: id }).select("id", "email", "first_name").first();
+        return db("users").where({ id: id }).select("id", "email", "name").first();
     },
     /**
      * 
