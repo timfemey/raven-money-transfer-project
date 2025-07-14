@@ -7,14 +7,31 @@ export const User = {
         const [id] = await db("users").insert({ ...user, password })
         return this.findByID(id)
     },
-
+    /**
+         * 
+         * @param {number} id
+         * @returns 
+    */
     findByID(id) {
-        return db("users").where({ id: id }).select("id", "email", "first_name", "balance").first();
+        return db("users").where({ id: id }).select("id", "email", "first_name").first();
     },
+    /**
+     * 
+     * @param {string} email 
+     * @returns 
+     */
     findByEmail(email) {
         return db("users").where({ email: email }).first();
     },
-    async updateBalance(id, amount) {
-        return db("users").where({ id: id }).increment("balance", amount)
+    /**
+     * 
+     * @param {string} email 
+     * @returns 
+     */
+    async userExist(email) {
+        if (this.findByEmail(email)) {
+            return true
+        }
+        return false
     }
 }
